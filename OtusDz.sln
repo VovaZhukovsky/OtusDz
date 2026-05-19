@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZeroAllocCore", "ZeroAllocCore\ZeroAllocCore.csproj", "{3B7EC0E3-450D-4537-B024-07410344F618}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZeroAllocCoreTest", "ZeroAllocCoreTest\ZeroAllocCoreTest.csproj", "{741398CB-AA90-4FC9-951C-FB551DCF667C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{3B7EC0E3-450D-4537-B024-07410344F618}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3B7EC0E3-450D-4537-B024-07410344F618}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3B7EC0E3-450D-4537-B024-07410344F618}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3B7EC0E3-450D-4537-B024-07410344F618}.Release|Any CPU.Build.0 = Release|Any CPU
+		{741398CB-AA90-4FC9-951C-FB551DCF667C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{741398CB-AA90-4FC9-951C-FB551DCF667C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{741398CB-AA90-4FC9-951C-FB551DCF667C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{741398CB-AA90-4FC9-951C-FB551DCF667C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
