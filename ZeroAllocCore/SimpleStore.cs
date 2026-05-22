@@ -1,6 +1,6 @@
 namespace ZeroAllocCore;
 
-public class SimpleStore
+public class SimpleStore : ISimpleStore
 {
     private readonly Dictionary<string, byte[]> _store = new();
     public void Set(string key, byte[] value)

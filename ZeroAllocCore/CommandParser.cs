@@ -4,21 +4,38 @@ public static class CommandParser
 {
     public static CommandParserResponse Parse(ReadOnlySpan<char> input)
     {
+        
+        input = input.Trim();
         int index0 = input.IndexOf(' ');
         
         if (index0 == -1)
             return new CommandParserResponse();
         
-        ReadOnlySpan<char> command = input.Slice(0, index0);
-        input = input.Slice(index0 + 1).TrimStart();
-        int index1 =  input.IndexOf(' ');
+        var command = input.Slice(0, index0);
         
+        input = input.Slice(index0 + 1).Trim();
+        
+        if(input.IsEmpty)
+            return new CommandParserResponse();
+        
+        int index1 =  input.IndexOf(' ');
+
         if (index1 == -1)
             return new CommandParserResponse(command, input);
         
-        ReadOnlySpan<char> key = input.Slice(0, index1);
-        ReadOnlySpan<char> value = input.Slice(index1 + 1).TrimStart();
-        return new CommandParserResponse(command, key, value);
+        var key = input.Slice(0, index1);
+        
+        input = input.Slice(index1 + 1).Trim();
+        
+        if(input.IsEmpty)
+            return new CommandParserResponse(command, key);
+        
+        int index2 =  input.IndexOf(' ');
+
+        if (index2 == -1)
+            return new CommandParserResponse(command, key, input);
+        
+        return new CommandParserResponse(command, key);
     }
 }
 public readonly ref struct CommandParserResponse
