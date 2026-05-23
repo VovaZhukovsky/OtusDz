@@ -21,9 +21,17 @@ public static class CommandParser
         int index1 =  input.IndexOf(' ');
 
         if (index1 == -1)
+        {
+            if(input.IsEmpty)
+                return new CommandParserResponse();
+            
             return new CommandParserResponse(command, input);
+        }
         
         var key = input.Slice(0, index1);
+        
+        if(key.IsEmpty)
+            return new CommandParserResponse();
         
         input = input.Slice(index1 + 1).Trim();
         
