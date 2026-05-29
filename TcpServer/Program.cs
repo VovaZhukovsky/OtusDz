@@ -5,32 +5,42 @@ using TcpServer;
 
 //server
 using CancellationTokenSource cts = new CancellationTokenSource();
-CancellationToken token = cts.Token;
+CancellationToken serverToken = cts.Token;
 
-var server = new TcpServer.TcpServer();
-_ = server.StartAsync(token);
-
+using var server = new TcpServer.TcpServer(8080);
+_ = server.StartAsync(serverToken);
 
 //client
-EndPoint ipEndPoint = new IPEndPoint(IPAddress.Loopback, 8080);
-using Socket client = new(
-    ipEndPoint.AddressFamily, 
-    SocketType.Stream, 
-    ProtocolType.Tcp);
-
-await client.ConnectAsync(ipEndPoint);
-var i = 0;
-while (cts.IsCancellationRequested == false)
+var tasks = new List<Task>();
+for (int j = 0; j < 10; j++)
 {
-    
-    if (i == 100000000)
-    {
-        cts.Cancel();
-        continue;
-    }
-    var message = $"set user:{i} data";
-    var messageBytes = Encoding.UTF8.GetBytes(message);
-    _ = await client.SendAsync(messageBytes, SocketFlags.None);
-    i++;
+    tasks.Add(Task.Run(() => StartClient(j)));
+    Thread.Sleep(1000);
+}
+await Task.WhenAll(tasks);
+async Task StartClient(int j)
+{
+    EndPoint ipEndPoint = new IPEndPoint(IPAddress.Loopback, 8080);
+    using Socket client = new(
+        ipEndPoint.AddressFamily, 
+        SocketType.Stream, 
+        ProtocolType.Tcp);
 
+    using CancellationTokenSource cts1 = new CancellationTokenSource();
+    await client.ConnectAsync(ipEndPoint);
+    var i = 0;
+    while (cts1.IsCancellationRequested == false)
+    {
+    
+        if (i == 1000000)
+        {
+            cts1.Cancel();
+            continue;
+        }
+        var message = $"set user:{j}-{i} data";
+        var messageBytes = Encoding.UTF8.GetBytes(message);
+        _ = await client.SendAsync(messageBytes, SocketFlags.None);
+        i++;
+
+    }
 }
