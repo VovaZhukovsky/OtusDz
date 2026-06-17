@@ -11,11 +11,13 @@ public class TcpServer : ITcpServer, IDisposable
 {
     private bool _isDisposed;
     private readonly List<Socket> _clientSockets = new();
+    private readonly SimpleStore _store;
     private int Port { get; }
 
-    public TcpServer(int port)
+    public TcpServer(int port, SimpleStore store)
     {
         Port = port;
+        _store = store;
     }
     public async Task StartAsync(CancellationToken cancellationToken = default)
     {
@@ -58,7 +60,6 @@ public class TcpServer : ITcpServer, IDisposable
         _isDisposed = true;
     }
     
-
     private async Task ProcessClientAsync(Socket clientSocket, CancellationToken cancellationToken = default)
     {
         var pool = ArrayPool<byte>.Shared;
@@ -78,7 +79,9 @@ public class TcpServer : ITcpServer, IDisposable
                     break;
                 
                 var response = Encoding.UTF8.GetChars(buffer, 0, received).AsMemory();
-                WriteToConsole(CommandParser.Parse(response.Span));
+                var result = ParserResponse(CommandParser.Parse(response.Span));
+                await clientSocket.SendAsync(result);
+
             }
         }
         finally
@@ -88,6 +91,33 @@ public class TcpServer : ITcpServer, IDisposable
         }
     }
 
+    private byte[] ParserResponse(CommandParserResponse response)
+    {
+        var key = response.Key.ToString();
+        var result = "OK\r\n";
+        switch (response.Command.ToString().ToLowerInvariant())
+        {
+            case "set":
+                _store.Set(key, Encoding.UTF8.GetBytes(response.Value.ToArray()));
+                break;
+            case "delete":
+                _store.Remove(key);
+                break;
+            case "get":
+                var value = _store.Get(key);
+                if (value == null)
+                {
+                    result = "(nil)\r\n";
+                    break;
+                }
+                result = $"{Encoding.UTF8.GetString(value)}\r\n";
+                break;
+            default:
+                result = "-ERR Unknown command\r\n";
+                break;
+        }
+        return Encoding.UTF8.GetBytes(result);
+    }
     private void WriteToConsole(CommandParserResponse response)
     {
         Console.WriteLine($"Command: {response.Command}, Key: {response.Key}, Value: {response.Value}");
