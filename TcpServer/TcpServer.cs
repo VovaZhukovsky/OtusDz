@@ -37,34 +37,12 @@ public class TcpServer : ITcpServer, IDisposable
             _ = Task.Run(() => ProcessClientAsync(clientSocket, cancellationToken), cancellationToken);
         }
     }
-
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
-    }
-
-    protected virtual void Dispose(bool isManual)
-    {
-        if (_isDisposed)
-            return;
-        
-        if (isManual)
-        {
-            foreach (var clientSocket in _clientSockets)
-            {
-                clientSocket.Dispose();
-            }
-        }
-
-        _isDisposed = true;
-    }
     
     private async Task ProcessClientAsync(Socket clientSocket, CancellationToken cancellationToken = default)
     {
         var pool = ArrayPool<byte>.Shared;
         var buffer = pool.Rent(1024);
-        
+        StringBuilder fullReceived = new StringBuilder();
         try
         {
             while (true)
@@ -78,7 +56,13 @@ public class TcpServer : ITcpServer, IDisposable
                 if (received == 0)
                     break;
                 
-                var response = Encoding.UTF8.GetChars(buffer, 0, received).AsMemory();
+                var encodeReceive = Encoding.UTF8.GetString(buffer, 0, received);
+                var isFullMessage = WaitFullMessage(encodeReceive, ref fullReceived);
+                if (!isFullMessage)
+                    continue;
+                
+                var response = fullReceived.ToString().AsMemory();
+                fullReceived = new StringBuilder();
                 var result = ParserResponse(CommandParser.Parse(response.Span));
                 await clientSocket.SendAsync(result);
 
@@ -118,9 +102,36 @@ public class TcpServer : ITcpServer, IDisposable
         }
         return Encoding.UTF8.GetBytes(result);
     }
-    private void WriteToConsole(CommandParserResponse response)
+
+    private bool WaitFullMessage(string encodeReceive,ref StringBuilder fullReceived)
     {
-        Console.WriteLine($"Command: {response.Command}, Key: {response.Key}, Value: {response.Value}");
+        fullReceived.Append(encodeReceive.Trim("\r\n".ToCharArray()).Trim(";".ToCharArray()));
+        if (!encodeReceive.Contains(";"))
+            return false;
+        
+        return true;
+    }
+    
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    protected virtual void Dispose(bool isManual)
+    {
+        if (_isDisposed)
+            return;
+        
+        if (isManual)
+        {
+            foreach (var clientSocket in _clientSockets)
+            {
+                clientSocket.Dispose();
+            }
+        }
+
+        _isDisposed = true;
     }
     
     private void DisposeClientSocket(Socket clientSocket)
