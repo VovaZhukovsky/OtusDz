@@ -40,38 +40,46 @@ public class TcpServer : ITcpServer, IDisposable
     
     private async Task ProcessClientAsync(Socket clientSocket, CancellationToken cancellationToken = default)
     {
-        var pool = ArrayPool<byte>.Shared;
-        var buffer = pool.Rent(1024);
         StringBuilder fullReceived = new StringBuilder();
         try
         {
             while (true)
             {
-                if (cancellationToken.IsCancellationRequested)
+                var buffer = ArrayPool<byte>.Shared.Rent(1024);
+                try
                 {
-                    break;
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        break;
+                    }
+                
+                    var received = await clientSocket.ReceiveAsync(buffer);
+                    if (received == 0)
+                        break;
+                
+                    var encodeReceive = Encoding.UTF8.GetString(buffer, 0, received);
+                    var isFullMessage = WaitFullMessage(encodeReceive, ref fullReceived);
+                    if (!isFullMessage)
+                        continue;
+                
+                    var response = fullReceived.ToString().AsMemory();
+                    fullReceived = new StringBuilder();
+                    var result = ParserResponse(CommandParser.Parse(response.Span));
+                    await clientSocket.SendAsync(result);
                 }
-                
-                var received = await clientSocket.ReceiveAsync(buffer);
-                if (received == 0)
-                    break;
-                
-                var encodeReceive = Encoding.UTF8.GetString(buffer, 0, received);
-                var isFullMessage = WaitFullMessage(encodeReceive, ref fullReceived);
-                if (!isFullMessage)
-                    continue;
-                
-                var response = fullReceived.ToString().AsMemory();
-                fullReceived = new StringBuilder();
-                var result = ParserResponse(CommandParser.Parse(response.Span));
-                await clientSocket.SendAsync(result);
-
+                finally
+                {
+                    ArrayPool<byte>.Shared.Return(buffer);
+                }
             }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Ошибка при обработке клиента: {ex.Message}");
         }
         finally
         {
             DisposeClientSocket(clientSocket);
-            pool.Return(buffer);
         }
     }
 
