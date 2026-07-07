@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.Json;
+using ZeroAllocCore;
 
 namespace LoadTest;
 
@@ -19,7 +21,8 @@ public class TcpTestClient: ITcpClient, IDisposable
 
     public async Task<string?> SetAsync(string key, string value)
     {
-        var message = $"set {key} {value};";
+        var profile = JsonSerializer.Serialize(new UserProfile() { Name = value });
+        var message = $"set {key} {profile};";
         var messageBytes = Encoding.UTF8.GetBytes(message);
         await _client.Client.SendAsync(messageBytes);
         return await _reader.ReadLineAsync();

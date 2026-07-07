@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.Json;
 using ZeroAllocCore;
 
 namespace TcpServer;
@@ -90,19 +91,23 @@ public class TcpServer : ITcpServer, IDisposable
         switch (response.Command.ToString().ToLowerInvariant())
         {
             case "set":
-                _store.Set(key, Encoding.UTF8.GetBytes(response.Value.ToArray()));
+                var profile = JsonSerializer.Deserialize<UserProfile>(response.Value);
+                _store.Set(key, profile);
+                Console.WriteLine($" set {key} {response.Value}");
                 break;
             case "delete":
                 _store.Remove(key);
+                Console.WriteLine($" delete {key}");
                 break;
             case "get":
-                var value = _store.Get(key);
+                var value = _store.Get(key); 
                 if (value == null)
                 {
                     result = "(nil)\r\n";
                     break;
                 }
-                result = $"{Encoding.UTF8.GetString(value)}\r\n";
+                result = $"{JsonSerializer.Serialize(value)}\r\n";
+                Console.WriteLine($"get {key} {result}");
                 break;
             default:
                 result = "-ERR Unknown command\r\n";

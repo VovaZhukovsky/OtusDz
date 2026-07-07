@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace ZeroAllocCore;
 
 public class SimpleStore : ISimpleStore, IDisposable
@@ -8,15 +10,15 @@ public class SimpleStore : ISimpleStore, IDisposable
     private readonly ReaderWriterLockSlim _lock = new ReaderWriterLockSlim();
     private readonly Dictionary<string, byte[]> _store = new();
     private bool _isDisposed;
-    public void Set(string? key, byte[]? value)
+    public void Set(string? key, UserProfile? profile)
     {
-        if (key is null && value is null)
+        if (key is null && profile is null)
             return;
         
         _lock.EnterWriteLock();
         try
         {
-            _store[key] = value;
+            _store[key] = JsonSerializer.SerializeToUtf8Bytes(profile);
             Interlocked.Increment(ref _setCount);
         }
         finally
@@ -26,7 +28,7 @@ public class SimpleStore : ISimpleStore, IDisposable
         
     }
 
-    public byte[]? Get(string? key)
+    public UserProfile? Get(string? key)
     {
         if (key is null)
             return null;
@@ -36,7 +38,12 @@ public class SimpleStore : ISimpleStore, IDisposable
         {
             var value = _store.GetValueOrDefault(key);
             Interlocked.Increment(ref _getCount);
-            return value;
+            
+            if (value is null)
+                return null;
+            
+            var profile = JsonSerializer.Deserialize<UserProfile>(value);
+            return profile;
         }
         finally
         {

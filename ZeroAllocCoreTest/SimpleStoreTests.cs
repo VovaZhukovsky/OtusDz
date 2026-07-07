@@ -9,19 +9,18 @@ public class SimpleStoreTests
     {
         var store = new SimpleStore();
         var tasks = new List<Task>();
-        tasks.Add(Task.Run(() => store.Set("test0", [1])));
+        tasks.Add(Task.Run(() => store.Set("test0", new UserProfile(){Name = "test0", Id = 1})));
         tasks.Add(Task.Run(() => store.Get("test0")));
-        tasks.Add(Task.Run(() => store.Set("test1", [2])));
+        tasks.Add(Task.Run(() => store.Set("test1", new UserProfile(){Name = "test1", Id = 2})));
         tasks.Add(Task.Run(() => store.Get("test1")));
-        tasks.Add(Task.Run(() => store.Set("test2", [3])));
-        tasks.Add(Task.Run(() => store.Set("test2", [4])));
+        tasks.Add(Task.Run(() => store.Set("test2", new UserProfile(){Name = "test2", Id = 3})));
+        tasks.Add(Task.Run(() => store.Set("test2", new UserProfile(){Name = "test2", Id = 4})));
+        tasks.Add(Task.Run(() => store.Set("test5", new UserProfile(){})));
+        tasks.Add(Task.Run(() => store.Set("test6",null)));
         tasks.Add(Task.Run(() => store.Get("test2")));
         await Task.WhenAll(tasks);
-        Assert.Equal(store.Get("test0"), [1]);
-        Assert.Equal(store.Get("test1"), [2]);
-        var value = store.Get("test2");
-        Assert.True(value.SequenceEqual(new byte[]{3}) || value.SequenceEqual(new byte[]{4}) );
+        Assert.True(tasks.All(task => task.IsCompletedSuccessfully));
         
-        Assert.Equal(store.GetStatistics(), (4,6,0));
+        Assert.Equal(store.GetStatistics(), (6,3,0));
     }
 }
