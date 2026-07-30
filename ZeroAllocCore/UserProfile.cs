@@ -1,6 +1,7 @@
 namespace ZeroAllocCore;
 
-public class UserProfile
+[GenerateBinarySerializer]
+public partial class UserProfile
 {
     private static int _nextId;
     public int Id { get; set; } = Interlocked.Increment(ref _nextId);

@@ -18,7 +18,8 @@ public class SimpleStore : ISimpleStore, IDisposable
         _lock.EnterWriteLock();
         try
         {
-            _store[key] = JsonSerializer.SerializeToUtf8Bytes(profile);
+            //_store[key] = JsonSerializer.SerializeToUtf8Bytes(profile);
+            _store[key] = profile is null ? new byte[]{} : profile.SerializeToBinary();
             Interlocked.Increment(ref _setCount);
         }
         finally
@@ -42,7 +43,8 @@ public class SimpleStore : ISimpleStore, IDisposable
             if (value is null)
                 return null;
             
-            var profile = JsonSerializer.Deserialize<UserProfile>(value);
+            //var profile = JsonSerializer.Deserialize<UserProfile>(value);
+            var profile = UserProfile.DeserializeFromBinary(value);
             return profile;
         }
         finally

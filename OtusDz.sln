@@ -8,6 +8,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TcpServer", "TcpServer\TcpS
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LoadTest", "LoadTest\LoadTest.csproj", "{C80E027B-021E-4D7D-8580-6CB7BBBDE078}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SourceGenerator", "SourceGenerator\SourceGenerator.csproj", "{1071FB11-8BDC-4E57-9F9C-E22D748A418B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SourceGeneratorTest", "SourceGeneratorTest\SourceGeneratorTest.csproj", "{1DF29979-70A4-4A0B-ADC8-16E06B97EFA0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +34,13 @@ Global
 		{C80E027B-021E-4D7D-8580-6CB7BBBDE078}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C80E027B-021E-4D7D-8580-6CB7BBBDE078}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C80E027B-021E-4D7D-8580-6CB7BBBDE078}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1071FB11-8BDC-4E57-9F9C-E22D748A418B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1071FB11-8BDC-4E57-9F9C-E22D748A418B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1071FB11-8BDC-4E57-9F9C-E22D748A418B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1071FB11-8BDC-4E57-9F9C-E22D748A418B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1DF29979-70A4-4A0B-ADC8-16E06B97EFA0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1DF29979-70A4-4A0B-ADC8-16E06B97EFA0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1DF29979-70A4-4A0B-ADC8-16E06B97EFA0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1DF29979-70A4-4A0B-ADC8-16E06B97EFA0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
