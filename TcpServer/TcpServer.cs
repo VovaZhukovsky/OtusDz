@@ -1,5 +1,6 @@
 using System.Buffers;
 using System.Collections.Concurrent;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -13,12 +14,15 @@ public class TcpServer : ITcpServer, IDisposable
     private bool _isDisposed;
     private readonly List<Socket> _clientSockets = new();
     private readonly SimpleStore _store;
+    private readonly SemaphoreSlim _semaphore;
+    private int _maxBytes = 4000;
     private int Port { get; }
 
-    public TcpServer(int port, SimpleStore store)
+    public TcpServer(int port, SimpleStore store,int maxConnections = 10)
     {
         Port = port;
         _store = store;
+        _semaphore = new SemaphoreSlim(maxConnections);
     }
     public async Task StartAsync(CancellationToken cancellationToken = default)
     {
@@ -41,6 +45,7 @@ public class TcpServer : ITcpServer, IDisposable
     
     private async Task ProcessClientAsync(Socket clientSocket, CancellationToken cancellationToken = default)
     {
+        await _semaphore.WaitAsync(cancellationToken);
         StringBuilder fullReceived = new StringBuilder();
         try
         {
@@ -60,6 +65,9 @@ public class TcpServer : ITcpServer, IDisposable
                 
                     var encodeReceive = Encoding.UTF8.GetString(buffer, 0, received);
                     var isFullMessage = WaitFullMessage(encodeReceive, ref fullReceived);
+                    int bytesCount = Encoding.UTF8.GetByteCount(fullReceived.ToString());
+                    if (bytesCount > _maxBytes)
+                        break;
                     if (!isFullMessage)
                         continue;
                 
@@ -81,23 +89,34 @@ public class TcpServer : ITcpServer, IDisposable
         finally
         {
             DisposeClientSocket(clientSocket);
+            _semaphore.Release();
         }
     }
 
     private byte[] ParserResponse(CommandParserResponse response)
     {
+        using var activity = Program.ActivitySource.StartActivity();
         var key = response.Key.ToString();
         var result = "OK\r\n";
+        activity?.SetTag("command.name", response.Command.ToString());
+        var watch = Stopwatch.StartNew();
         switch (response.Command.ToString().ToLowerInvariant())
         {
+            
             case "set":
                 var profile = JsonSerializer.Deserialize<UserProfile>(response.Value);
                 _store.Set(key, profile);
                 Console.WriteLine($" set {key} {response.Value}");
+                watch.Stop();
+                Program.SetCommands.Add(1);
+                Program.SetCommandsHistogram.Record(watch.Elapsed.TotalSeconds);
                 break;
             case "delete":
                 _store.Remove(key);
                 Console.WriteLine($" delete {key}");
+                watch.Stop();
+                Program.DeleteCommands.Add(1);
+                Program.DeleteCommandsHistogram.Record(watch.Elapsed.TotalSeconds);
                 break;
             case "get":
                 var value = _store.Get(key); 
@@ -108,11 +127,15 @@ public class TcpServer : ITcpServer, IDisposable
                 }
                 result = $"{JsonSerializer.Serialize(value)}\r\n";
                 Console.WriteLine($"get {key} {result}");
+                watch.Stop();
+                Program.GetCommands.Add(1);
+                Program.GetCommandsHistogram.Record(watch.Elapsed.TotalSeconds);
                 break;
             default:
                 result = "-ERR Unknown command\r\n";
                 break;
         }
+        activity?.SetTag("result.status", result);
         return Encoding.UTF8.GetBytes(result);
     }
 
